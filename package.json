@@ -1,0 +1,25 @@
+{
+  "dependencies": {
+    "express": "^5.1.0",
+    "sqlite3": "^5.1.7",
+    "vue": "^3.5.17"
+  },
+  "name": "recipeapp",
+  "version": "1.0.0",
+  "description": "这是一个小型的全栈Web应用，允许用户浏览和添加他们最喜欢的食谱。该项目的主要目的是作为一个学习载体，用于实践和深化现代前端与后端开发的核心概念。",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/johnChow-tech/RecipeApp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/johnChow-tech/RecipeApp/issues"
+  },
+  "homepage": "https://github.com/johnChow-tech/RecipeApp#readme"
+}

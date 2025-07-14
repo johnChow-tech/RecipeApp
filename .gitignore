@@ -1,0 +1,5 @@
+# Dependencies
+/node_modules
+
+# complied css file
+/public/style.css
