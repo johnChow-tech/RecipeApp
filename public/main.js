@@ -63,6 +63,7 @@ const App = {
     </div>
   `,
   methods: {
+    // TODO: fetchRecipes(){}
     /**
      *  监听子组件的添加事件，负责更新 recipes 列表
      * @param {object}newRecipe -新增对象菜谱的object
