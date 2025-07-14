@@ -52,24 +52,34 @@ const mockRecipes = [
 //
 const App = {
   data() {
-    // ... 在这里返回你的 recipes 数组 ...
-  },
-  methods: {
-    onRecipeAdd() { },
-    onRecipeDelete() { },
+    return {
+      recipes: mockRecipes,
+    };
   },
   template: `
     <div>
-      <h1>我的食谱书</h1>
-      
-      <recipe-form @add-recipe="..."></recipe-form>
-      
-      <hr>
-      
-      <recipe-list :recipes="..." @delete-recipe="..."></recipe-list>
-      
+      <recipe-form @add-recipe="onRecipeAdd($event)"></recipe-form>
+      <recipe-list :recipes="recipes" @delete-recipe="onRecipeDelete($event)"></recipe-list>
     </div>
   `,
+  methods: {
+    /**
+     *  监听子组件的添加事件，负责更新 recipes 列表
+     * @param {object}newRecipe -新增对象菜谱的object
+     */
+    onRecipeAdd(newRecipe) {
+      this.recipes.unshift(newRecipe);
+    },
+    /**
+     * 监听子组件的删除事件，负责更新 recipes 列表
+     * @param {number}idToDelete -删除对象菜谱的ID
+     */
+    onRecipeDelete(idToDelete) {
+      const recipes = this.recipes;
+      this.recipes = this.recipes.filter((recipe) => recipe.id !== idToDelete);
+      // fetchRecipes() {},
+    },
+  },
 };
 
 // 最后，你的 app 实例应该挂载这个 App 组件
@@ -96,8 +106,8 @@ const RecipeList = {
   `,
   methods: {
     /**
-     * 传递删除菜谱至父级组件app
-     * @param recipeToDelete - 要删除的对象菜谱
+     * 传递删除菜谱向上传递至父级组件app
+     * @param {number}recipeidToDelete - 要删除的对象菜谱
      */
     handleDeleteRelay(recipeidToDelete) {
       this.$emit("delete-recipe", recipeidToDelete);
@@ -115,7 +125,6 @@ const RecipeCard = {
   // props: 用来声明该组件可以从父组件接收哪些数据
   // 我们期望从父组件那里接收一个名为 "recipe" 的对象
   props: ["recipe"],
-
   // emits: 用来声明该组件会触发哪些自定义事件
   // 我们声明会触发一个名为 "delete-me" 的事件
   emits: ["delete-me"],
@@ -163,7 +172,10 @@ const RecipeForm = {
         alert("请输入菜谱名和菜谱描述");
         return;
       }
-      this.$emit("add-recipe", newRecipe);
+      this.$emit("add-recipe", { ...newRecipe });
+      // DEBUG
+      console.log("newRecipe.title:" + newRecipe.title);
+      console.log("newRecipe.description:" + newRecipe.description);
       // 初期化输入框
       newRecipe.title = "";
       newRecipe.description = "";
@@ -180,9 +192,9 @@ const app = Vue.createApp(App);
 
 // 2. 将我们定义的所有子组件，作为“零件”，注册到 App 实例上
 //    这样 App 的模板在看到 <recipe-list> 等标签时，才知道它们是什么
-app.component('recipe-list', RecipeList);
-app.component('recipe-card', RecipeCard);
-app.component('recipe-form', RecipeForm);
+app.component("recipe-list", RecipeList);
+app.component("recipe-card", RecipeCard);
+app.component("recipe-form", RecipeForm);
 
 // 3. 将组装好的应用，挂载到 HTML 页面上那个 <div id="app"></div> 的元素上
-app.mount('#app');
+app.mount("#app");
