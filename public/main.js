@@ -1,22 +1,3 @@
-// 模拟从服务器获取的食谱数据 (Mock Data)
-const mockRecipes = [
-  {
-    id: 1,
-    title: "番茄炒蛋",
-    description: "一道简单美味的家常菜，富含蛋白质和维生素。",
-  },
-  {
-    id: 2,
-    title: "可乐鸡翅",
-    description: "甜咸可口，深受孩子们喜爱的一道快手菜。",
-  },
-  {
-    id: 3,
-    title: "清炒西兰花",
-    description: "健康清淡，保持了西兰花的爽脆和营养。",
-  },
-];
-
 // --- 组件设计蓝图 ---
 /**
  +-------------------------------+
@@ -53,32 +34,109 @@ const mockRecipes = [
 const App = {
   data() {
     return {
-      recipes: mockRecipes,
+      recipes: [],
+      isLoading: false,
+      errorMsg: "",
     };
   },
+
   template: `
     <div>
       <recipe-form @add-recipe="onRecipeAdd($event)"></recipe-form>
-      <recipe-list :recipes="recipes" @delete-recipe="onRecipeDelete($event)"></recipe-list>
+      <div v-if="isLoading" class="loading-state">
+        <p>正在加载食谱中，请稍候...</p>
+      </div>
+      <div v-else-if="errorMsg" class="error-state">
+        <p>{{ errorMsg }}</p>
+      </div>
+      <recipe-list v-else :recipes="recipes" @delete-recipe="onRecipeDelete($event)"></recipe-list>
     </div>
   `,
   methods: {
+    /** 应用启动时，从后端获取初始食谱列表
+     * @param null
+     */
+    async fetchRecipes() {
+      try {
+        console.log("侦测点：开始调用 fetchRecipes() ...");
+        this.isLoading = true;
+        this.errorMsg = "";
+
+        // 使用 fetch API 向我们的后端服务发送 GET 请求
+        const response = await fetch("/api/recipes");
+
+        if (!response.ok) {
+          // 如果服务器返回的不是成功状态码 (比如 404, 500)，就抛出一个错误
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // 将响应体解析为 JSON 格式
+        const data = await response.json();
+        this.isLoading = false;
+        // 用从后端获取的数据，来更新我们组件的 recipes 数组
+        this.recipes = data;
+        console.log(
+          "侦测点：数据获取成功，并已更新到 this.recipes:",
+          this.recipes
+        );
+      } catch (error) {
+        // 如果 fetch 过程中发生任何错误（比如网络不通），就在控制台打印出来
+        this.isLoading = false;
+        this.errorMsg = "无法加载食谱列表，请稍后重试。";
+        console.error("获取食谱数据失败:", error);
+        // 在这里，我们未来可以添加一些用户友好的错误提示，比如在页面上显示“加载失败”
+      }
+    },
     /**
      *  监听子组件的添加事件，负责更新 recipes 列表
      * @param {object}newRecipe -新增对象菜谱的object
      */
-    onRecipeAdd(newRecipe) {
-      this.recipes.unshift(newRecipe);
+    async onRecipeAdd(newRecipe) {
+      try {
+        const response = await fetch("/api/recipes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: newRecipe.title,
+            description: newRecipe.description,
+          }),
+        });
+        if (!response.ok) {
+          // 如果服务器返回的不是成功状态码 (比如 404, 500)，就抛出一个错误
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const savedRecipe = await response.json();
+        this.recipes.unshift(savedRecipe);
+      } catch (error) {
+        console.log(`ERROR:${error}`);
+      }
     },
     /**
      * 监听子组件的删除事件，负责更新 recipes 列表
      * @param {number}idToDelete -删除对象菜谱的ID
      */
-    onRecipeDelete(idToDelete) {
-      const recipes = this.recipes;
-      this.recipes = this.recipes.filter((recipe) => recipe.id !== idToDelete);
-      // fetchRecipes() {},
+    async onRecipeDelete(idToDelete) {
+      try {
+        const response = await fetch(`/api/recipes/${idToDelete}`, {
+          method: "DELETE",
+        });
+        if (!response.ok) {
+          // 如果服务器返回的不是成功状态码 (比如 404, 500)，就抛出一个错误
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        this.recipes = this.recipes.filter(
+          (recipe) => recipe.id !== idToDelete
+        );
+      } catch (error) {
+        console.log(`ERROR:${error}`);
+      }
     },
+  },
+  mounted() {
+    // 打印日志，确认钩子被调用
+    console.log("侦测点：App 组件已被挂载到页面上，mounted() 钩子被触发！");
+    // 当组件挂载后，我们立刻调用方法去获取数据
+    this.fetchRecipes();
   },
 };
 
